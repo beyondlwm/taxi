@@ -1,0 +1,61 @@
+// Copyright (C) 2018-present ichenq@outlook.com. All rights reserved.
+// Distributed under the terms and conditions of the Apache License.
+// See accompanying files LICENSE.
+
+syntax = "proto3";
+
+package descriptor;
+
+// available type names:
+//  nil,bool,int8,uint8,int16,uint16,int32,uint32,int64,uint64,float32,float64,string,bytes,datetime
+enum TypeEnum {
+    Unknown   = 0;
+	Nil       = 1;
+	Bool      = 2;
+	Int8      = 3;
+	Uint8     = 4;
+	Int16     = 5;
+	Uint16    = 6;
+	Int32     = 7;
+	Uint32    = 8;
+	Int64     = 9;
+	Uint64    = 10;
+	Float32   = 11;
+	Float64   = 12;
+	String    = 13;
+	Bytes     = 14;
+	DateTime  = 15;
+};
+
+message StructDescriptor {
+    string name = 1;
+    string camel_case_name = 2;
+    string comment = 3;
+    repeated FieldDescriptor fields = 4;
+    map<string,string> options = 5;
+}
+
+message FieldDescriptor {
+    string name = 1;
+    string camel_case_name = 2;
+    TypeEnum type = 3;
+    string type_name = 4;
+    string original_type_name = 5;
+    string comment = 6;
+    string default_value = 7;
+    map<string,string> options = 8;
+}
+
+message ImportResult {
+    string version = 1;
+    string comment = 2;
+    string timestamp = 3;
+    repeated StructDescriptor descriptors = 4;
+}
+
+message ExportRequest {
+    string version = 1;
+    string format = 3;
+    string filepath = 4;
+    string args = 5;
+}
