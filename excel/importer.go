@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -20,11 +21,30 @@ import (
 )
 
 type ExcelImporter struct {
-	filename         string
+	filelist         []string
 	doc              *excelize.File
 	meta             map[string]string
 	currentSheetName string
 	dataRows         [][]string
+}
+
+func enumerateExcelFiles(dir string) []string {
+	var files []string
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			log.Printf("walk dir[%s]: %v\n", dir, err)
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		var ext = filepath.Ext(path)
+		if ext == ".xlsx" {
+			files = append(files, path)
+		}
+		return nil
+	})
+	return files
 }
 
 func (e *ExcelImporter) Name() string {
@@ -37,40 +57,48 @@ func (e *ExcelImporter) Init(args string) error {
 	if err != nil {
 		return err
 	}
-	var filename = opts["filename"]
-	if filename == "" {
-		return fmt.Errorf("empty excel filename")
+
+	var files []string
+	if dir := opts["filedir"]; dir != "" {
+		files = enumerateExcelFiles(dir)
 	}
-	doc, err := excelize.OpenFile(filename)
-	if err != nil {
-		return err
+	if filepath := opts["filename"]; filepath != "" {
+		files = append(files, filepath)
 	}
-	e.filename = filename
-	e.doc = doc
+
 	return nil
 }
 
 func (e *ExcelImporter) parseMeta() error {
 	var rows = e.doc.GetRows(PredefMetaSheet)
-	if len(rows) == 0 {
-		return fmt.Errorf("no meta sheet found")
-	}
-	for _, row := range rows {
-		if len(row) >= 2 {
-			var key = strings.TrimSpace(row[0])
-			var value = strings.TrimSpace(row[1])
-			e.meta[key] = value // key-value pair
+	if len(rows) > 0 {
+		for _, row := range rows {
+			if len(row) >= 2 {
+				var key = strings.TrimSpace(row[0])
+				var value = strings.TrimSpace(row[1])
+				if key != "" && value != "" {
+					e.meta[key] = value // key-value pair
+				}
+			}
 		}
 	}
+
 	if e.meta[PredefStructTypeColumn] == "" {
-		return fmt.Errorf("struct type column not defined")
+		e.meta[PredefStructTypeColumn] = "1"
 	}
 	if e.meta[PredefStructNameColumn] == "" {
-		return fmt.Errorf("struct name column not defined")
+		e.meta[PredefStructNameColumn] = "2"
+	}
+	if e.meta[PredefCommentColumn] == "" {
+		e.meta[PredefCommentColumn] = "3"
 	}
 	if e.meta[PredefDataStartColumn] == "" {
-		return fmt.Errorf("struct data column not defined")
+		e.meta[PredefDataStartColumn] = "4"
 	}
+	if len(e.meta["keys"]) == 0 {
+		e.meta["keys"] = "1" // default first column is key
+	}
+	fmt.Printf("sheet meta %v\n", e.meta)
 	return nil
 }
 
@@ -86,6 +114,7 @@ func (e *ExcelImporter) parseSheet(sheetName string) (*descriptor.StructDescript
 	// validate meta index
 	typeColumnIndex, err := strconv.Atoi(e.meta[PredefStructTypeColumn])
 	if err != nil {
+		fmt.Printf("parse %s failed\n", PredefStructTypeColumn)
 		return nil, err
 	}
 	if typeColumnIndex >= len(rows) {
@@ -93,6 +122,7 @@ func (e *ExcelImporter) parseSheet(sheetName string) (*descriptor.StructDescript
 	}
 	nameColumnIndex, err := strconv.Atoi(e.meta[PredefStructNameColumn])
 	if err != nil {
+		fmt.Printf("parse %s failed\n", PredefStructNameColumn)
 		return nil, err
 	}
 	if nameColumnIndex >= len(rows) {
@@ -100,6 +130,7 @@ func (e *ExcelImporter) parseSheet(sheetName string) (*descriptor.StructDescript
 	}
 	dataStartColumnIndex, err := strconv.Atoi(e.meta[PredefDataStartColumn])
 	if err != nil {
+		fmt.Printf("parse %s failed\n", PredefDataStartColumn)
 		return nil, err
 	}
 	if dataStartColumnIndex >= len(rows) || dataStartColumnIndex <= typeColumnIndex || dataStartColumnIndex <= nameColumnIndex {
@@ -187,25 +218,19 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 	return &class
 }
 
-func (e *ExcelImporter) Import() (*descriptor.ImportResult, error) {
+func (e *ExcelImporter) imporeOneFile(result *descriptor.ImportResult) error {
 	if err := e.parseMeta(); err != nil {
-		return nil, err
-	}
-	var result = &descriptor.ImportResult{
-		Version:   version.Version,
-		Comment:   "excel",
-		Timestamp: descriptor.FormatTime(time.Now()),
-		Options:   e.meta,
+		return err
 	}
 	if e.meta["sheet"] != "" {
 		var sheetName = e.meta["sheet"]
 		des, err := e.parseSheet(sheetName)
 		if err != nil {
 			fmt.Printf("parse sheet %s failed", sheetName)
-			return nil, err
+			return err
 		}
 		result.Descriptors = append(result.Descriptors, des)
-		return result, nil
+		return nil
 	}
 	sheetMap := e.doc.GetSheetMap()
 	if e.meta["parse-mode"] != "" {
@@ -217,11 +242,11 @@ func (e *ExcelImporter) Import() (*descriptor.ImportResult, error) {
 				des, err := e.parseSheet(sheetName)
 				if err != nil {
 					fmt.Printf("parse sheet %s failed", sheetName)
-					return nil, err
+					return err
 				}
 				result.Descriptors = append(result.Descriptors, des)
 			} else {
-				return nil, fmt.Errorf("ExcelImporter: no active sheet")
+				return fmt.Errorf("ExcelImporter: no active sheet")
 			}
 		} else if mode == "all" {
 			for _, sheetName := range sheetMap {
@@ -229,24 +254,45 @@ func (e *ExcelImporter) Import() (*descriptor.ImportResult, error) {
 					des, err := e.parseSheet(sheetName)
 					if err != nil {
 						fmt.Printf("parse sheet %s failed", sheetName)
-						return nil, err
+						return err
 					}
 					result.Descriptors = append(result.Descriptors, des)
 				}
 			}
 		} else {
-			return nil, fmt.Errorf("unsupported parse mode %s", mode)
+			return fmt.Errorf("unsupported parse mode %s", mode)
 		}
-		return result, nil
+		return nil
 	}
 	// parse first sheet
 	var sheetName = sheetMap[1]
 	des, err := e.parseSheet(sheetName)
 	if err != nil {
 		fmt.Printf("parse sheet %s failed", sheetName)
-		return nil, err
+		return err
 	}
 	result.Descriptors = append(result.Descriptors, des)
+	return nil
+}
+
+func (e *ExcelImporter) Import() (*descriptor.ImportResult, error) {
+	var result = &descriptor.ImportResult{
+		Version:   version.Version,
+		Comment:   "excel",
+		Timestamp: descriptor.FormatTime(time.Now()),
+	}
+	for _, filename := range e.filelist {
+		fmt.Printf("start parse file %s\n", filename)
+		doc, err := excelize.OpenFile(filename)
+		if err != nil {
+			return nil, err
+		}
+		e.doc = doc
+		if err := e.imporeOneFile(result); err != nil {
+			return nil, err
+		}
+	}
+
 	return result, nil
 }
 
