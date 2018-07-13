@@ -12,14 +12,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/MakingGame/taxi/descriptor"
 	"github.com/MakingGame/taxi/version"
-)
-
-const (
-	MainScriptSeperator = "exporter"
 )
 
 var RegisteredInterpreters = map[string]string{
@@ -38,15 +33,11 @@ func EnumerateExporterScripts(dir string) []string {
 			return nil
 		}
 		var ext = filepath.Ext(path)
-
 		interpreter := RegisteredInterpreters[ext]
 		if interpreter == "" {
 			return nil
 		}
-		var base = filepath.Base(path)
-		if strings.Index(base, MainScriptSeperator) >= 0 {
-			scripts = append(scripts, path)
-		}
+		scripts = append(scripts, path)
 		return nil
 	})
 	return scripts
@@ -79,36 +70,37 @@ func RunScriptCommand(script, argument, params string) error {
 		log.Fatalf("invalid interpreter of %s", script)
 	}
 	var output bytes.Buffer
+	fmt.Printf("run %s %s", interpreter, script)
 	var cmd = exec.Command(interpreter, script, argument, params)
 	cmd.Stdout = &output
 	cmd.Stderr = &output
 	if err := cmd.Run(); err != nil {
-		log.Printf("run %s %s: %v\n%s", interpreter, script, err, output.String())
+		fmt.Printf("run %s %s: %v\n%s", interpreter, script, err, output.String())
 	} else {
-		log.Printf("run %s %s:\n%s\n", interpreter, script, output.String())
+		fmt.Printf("run %s %s:\n%s\n", interpreter, script, output.String())
 	}
 
 	return nil
 }
 
-func RunExport(path, dir, params string, result *descriptor.ImportResult) error {
-	if dir == "" && path == "" {
+func RunExport(filepath, dir, params string, result *descriptor.ImportResult) error {
+	if dir == "" && filepath == "" {
 		return fmt.Errorf("exporter path is empty, no exporter executed")
 	}
 
-	filepath, err := StoreResultToTempFile(result)
+	filename, err := StoreResultToTempFile(result)
 	if err != nil {
 		return err
 	}
-	defer os.Remove(filepath)
+	defer os.Remove(filename)
 
-	log.Printf("write descriptor to file %s\n", filepath)
+	fmt.Printf("write descriptor to file %s\n", filename)
 
 	// marshal request to command line argument string
 	var request = &descriptor.ExportRequest{
 		Version:  version.Version,
 		Format:   "json",
-		Filepath: filepath,
+		Filepath: filename,
 	}
 	data, err := json.Marshal(request)
 	if err != nil {
@@ -119,12 +111,15 @@ func RunExport(path, dir, params string, result *descriptor.ImportResult) error 
 	if dir != "" {
 		scripts = EnumerateExporterScripts(dir)
 	}
-	if path != "" {
-		scripts = append(scripts, path)
+	if filepath != "" {
+		scripts = append(scripts, filepath)
+	}
+	if len(scripts) == 0 {
+		return fmt.Errorf("no export script found")
 	}
 	for _, script := range scripts {
 		if err := RunScriptCommand(script, argument, params); err != nil {
-			log.Printf("%s %s: %v\n", script, argument, err)
+			fmt.Printf("%s %s: %v\n", script, argument, err)
 		}
 	}
 

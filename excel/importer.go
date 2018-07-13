@@ -124,7 +124,11 @@ func (e *ExcelImporter) parseSheet(sheetName string) (*descriptor.StructDescript
 
 func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameColumnIndex, dataStartColumnIndex, dataEndColumnIndex int) *descriptor.StructDescriptor {
 	var class descriptor.StructDescriptor
-	println(typeColumnIndex, nameColumnIndex, dataStartColumnIndex, dataEndColumnIndex)
+	class.Comment = e.meta["comment"]
+	if class.Comment == "" {
+		class.Comment = " "
+	}
+
 	// class name
 	var className = e.currentSheetName
 	if e.meta[PredefClassName] != "" {
@@ -148,9 +152,9 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 			continue
 		}
 		var field descriptor.FieldDescriptor
-		field.Name = namesRow[i]
+		field.Name = strings.TrimSpace(namesRow[i])
 		field.CamelCaseName = descriptor.CamelCase(field.Name)
-		field.TypeName = typeRow[i]
+		field.TypeName = strings.TrimSpace(typeRow[i])
 		field.OriginalTypeName = field.TypeName
 		field.Type = descriptor.NameToType(typeRow[i])
 		if field.Type == descriptor.TypeEnum_Unknown {
@@ -177,7 +181,9 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 			log.Panicf("write data to %s failed: %v", filename, err)
 		}
 	}
+	class.Options = e.meta
 	class.Options["datafile"] = filename
+	fmt.Printf("write csv data file to %s\n", filename)
 	return &class
 }
 
