@@ -14,10 +14,12 @@ type_mapping = {
     'uint8': 'uint8',
     'int16': 'int16',
     'uint16': 'uint16',
+    'int': 'int',
     'int32': 'int32',
     'uint32': 'uint32',
     'int64': 'int64',
     'uint64': 'uint64',
+    'float': 'float32',
     'float32': 'float32',
     'float64': 'float64',
     'string': 'string',
@@ -39,8 +41,7 @@ def gen_go_struct(struct):
     for field in struct['fields']:
         typename = type_mapping[field['type_name']]
         assert typename != "", field['type_name']
-        content += '\t%s %s `json:"%s"`// %s\n' % (
-        field['camel_case_name'], typename, field['name'], field['comment'])
+        content += '\t%s %s `json:"%s"`// %s\n' % (field['camel_case_name'], typename, field['name'], field['comment'])
     content += '}\n'
     return content
 
