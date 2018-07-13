@@ -23,7 +23,7 @@ type Options struct {
 	Mode        string `short:"M" long:"mode" description:"mode of importer source"`
 	ImportArgs  string `long:"import-args" description:"arguments of importer"`
 	ExportArgs  string `long:"export-args" description:"arguments of exporter"`
-	ExporterDir string `long:"export-dir" description:"exporter template directory"`
+	ExporterDir string `long:"export-template-dir" description:"exporter template directory"`
 }
 
 func NewOptions() *Options {

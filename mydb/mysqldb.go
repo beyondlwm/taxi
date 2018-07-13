@@ -240,6 +240,9 @@ func (m *MyDB) LoadTable(tablename string) (*MyTable, error) {
 		Name:    name,
 		Comment: comment,
 	}
+	if table.Comment == "" {
+		table.Comment = "  " // fix protobuf empty string 
+	}
 	if err := m.LoadColumns(table); err != nil {
 		return nil, err
 	}
@@ -264,6 +267,9 @@ func (m *MyDB) LoadColumns(table *MyTable) error {
 			Comment: comment,
 			Key:     key,
 			IsNull:  nullable == "YES",
+		}
+		if column.Comment == "" {
+			column.Comment = " " // fix protobuf empty string
 		}
 		table.Columns = append(table.Columns, column)
 		if key == "PRI" {
