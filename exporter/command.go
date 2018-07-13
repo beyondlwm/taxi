@@ -9,32 +9,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/MakingGame/taxi/descriptor"
+	"github.com/MakingGame/taxi/version"
 )
 
 const (
 	MainScriptSeperator = "exporter"
-	asciiAlphabet       = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
 var RegisteredInterpreters = map[string]string{
 	".py": "python",
 	".js": "node",
-}
-
-func RandAlphbetString(length int) string {
-	result := make([]byte, length)
-	for i := 0; i < length; i++ {
-		idx := rand.Int() % len(asciiAlphabet)
-		result[i] = asciiAlphabet[idx]
-	}
-	return string(result)
 }
 
 func EnumerateExporterScripts(dir string) []string {
@@ -62,20 +52,8 @@ func EnumerateExporterScripts(dir string) []string {
 	return scripts
 }
 
-func MakeOneTempFile() string {
-	for maxtry := 20; maxtry > 0; maxtry-- {
-		var filename = fmt.Sprintf("%s/taxi_%s.json", os.TempDir(), RandAlphbetString(8))
-		if f, err := os.Open(filename); err != nil {
-			return filename
-		} else {
-			f.Close()
-		}
-	}
-	return ""
-}
-
 func StoreResultToTempFile(result *descriptor.ImportResult) (string, error) {
-	var filepath = MakeOneTempFile()
+	var filepath = descriptor.MakeOneTempFile("taxi", ".json")
 	if filepath == "" {
 		return "", fmt.Errorf("cannot create temporary file")
 	}
@@ -113,9 +91,9 @@ func RunScriptCommand(script, argument, params string) error {
 	return nil
 }
 
-func RunExport(dir, params string, result *descriptor.ImportResult) error {
-	if dir == "" {
-		return fmt.Errorf("export dir is empty, no exported executed")
+func RunExport(path, dir, params string, result *descriptor.ImportResult) error {
+	if dir == "" && path == "" {
+		return fmt.Errorf("exporter path is empty, no exporter executed")
 	}
 
 	filepath, err := StoreResultToTempFile(result)
@@ -128,7 +106,7 @@ func RunExport(dir, params string, result *descriptor.ImportResult) error {
 
 	// marshal request to command line argument string
 	var request = &descriptor.ExportRequest{
-		Version:  "1.0.1",
+		Version:  version.Version,
 		Format:   "json",
 		Filepath: filepath,
 	}
@@ -137,7 +115,13 @@ func RunExport(dir, params string, result *descriptor.ImportResult) error {
 		return err
 	}
 	var argument = string(data)
-	var scripts = EnumerateExporterScripts(dir)
+	var scripts []string
+	if dir != "" {
+		scripts = EnumerateExporterScripts(dir)
+	}
+	if path != "" {
+		scripts = append(scripts, path)
+	}
 	for _, script := range scripts {
 		if err := RunScriptCommand(script, argument, params); err != nil {
 			log.Printf("%s %s: %v\n", script, argument, err)

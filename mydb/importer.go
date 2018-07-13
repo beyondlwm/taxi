@@ -9,12 +9,12 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strings"
+	"time"
 
 	"github.com/MakingGame/taxi/descriptor"
 	"github.com/MakingGame/taxi/importer"
+	"github.com/MakingGame/taxi/version"
 	_ "github.com/go-sql-driver/mysql"
-	"time"
 )
 
 type MySQLImporter struct {
@@ -27,7 +27,7 @@ func (m *MySQLImporter) Name() string {
 }
 
 func (m *MySQLImporter) Init(args string) error {
-	opts, err := m.parseArgs(args)
+	opts, err := importer.ParseArgs(args)
 	if err != nil {
 		return err
 	}
@@ -48,22 +48,6 @@ func (m *MySQLImporter) Init(args string) error {
 
 func (m *MySQLImporter) Close() {
 	m.conn.Close()
-}
-
-func (m *MySQLImporter) parseArgs(args string) (map[string]string, error) {
-	if args == "" {
-		return nil, fmt.Errorf("cannot use empty DSN arguments")
-	}
-	var kvlist = strings.Split(args, ",")
-	var opts = make(map[string]string)
-	for _, item := range kvlist {
-		kv := strings.Split(item, "=")
-		if len(kv) != 2 {
-			return nil, fmt.Errorf("invalid mysql DSN arguments: %s", item)
-		}
-		opts[kv[0]] = kv[1]
-	}
-	return opts, nil
 }
 
 // DSN format: user:pwd@tcp(host:port)/db?charset=utf8&interpolateParams=true&parseTime=true&loc=Local
@@ -151,9 +135,9 @@ func (m *MySQLImporter) Import() (*descriptor.ImportResult, error) {
 		descriptors = append(descriptors, tbl.ToDescriptor())
 	}
 	var result = &descriptor.ImportResult{
-		Version:     "1.0",
+		Version:     version.Version,
 		Comment:     "mysql",
-		Timestamp:   time.Now().Format(timestampFormat),
+		Timestamp:   descriptor.FormatTime(time.Now()),
 		Descriptors: descriptors,
 	}
 	return result, nil

@@ -4,6 +4,14 @@
 
 package descriptor
 
+import (
+	"fmt"
+	"math/rand"
+	"os"
+)
+
+const asciiAlphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
 // Is c an ASCII lower-case letter?
 func isASCIILower(c byte) bool {
 	return 'a' <= c && c <= 'z'
@@ -59,4 +67,25 @@ func CamelCase(s string) string {
 		}
 	}
 	return string(t)
+}
+
+func RandAlphbetString(length int) string {
+	result := make([]byte, length)
+	for i := 0; i < length; i++ {
+		idx := rand.Int() % len(asciiAlphabet)
+		result[i] = asciiAlphabet[idx]
+	}
+	return string(result)
+}
+
+func MakeOneTempFile(prefix, suffix string) string {
+	for maxtry := 20; maxtry > 0; maxtry-- {
+		var filename = fmt.Sprintf("%s/%s_%s%s", os.TempDir(), prefix, RandAlphbetString(8), suffix)
+		if f, err := os.Open(filename); err != nil {
+			return filename
+		} else {
+			f.Close()
+		}
+	}
+	return ""
 }

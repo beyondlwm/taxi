@@ -22,8 +22,6 @@ type MyColumn struct {
 	Key     string
 }
 
-const timestampFormat = "2006-01-02 15:04:05.999"
-
 func (c *MyColumn) ToEnumTypeName() string {
 	switch {
 	case strings.HasPrefix(c.Type, "tinyint"):
@@ -241,7 +239,7 @@ func (m *MyDB) LoadTable(tablename string) (*MyTable, error) {
 		Comment: comment,
 	}
 	if table.Comment == "" {
-		table.Comment = "  " // fix protobuf empty string 
+		table.Comment = "  " // fix protobuf empty string
 	}
 	if err := m.LoadColumns(table); err != nil {
 		return nil, err

@@ -5,7 +5,9 @@
 package importer
 
 import (
+	"fmt"
 	"log"
+	"strings"
 	"sync"
 
 	"github.com/MakingGame/taxi/descriptor"
@@ -41,4 +43,20 @@ func ImporterByName(name string) Importer {
 	v := importers[name]
 	mut.Unlock()
 	return v
+}
+
+func ParseArgs(args string) (map[string]string, error) {
+	if args == "" {
+		return nil, fmt.Errorf("empty arguments")
+	}
+	var kvlist = strings.Split(args, ",")
+	var opts = make(map[string]string)
+	for _, item := range kvlist {
+		kv := strings.Split(item, "=")
+		if len(kv) != 2 {
+			return nil, fmt.Errorf("invalid mysql DSN arguments: %s", item)
+		}
+		opts[kv[0]] = kv[1]
+	}
+	return opts, nil
 }

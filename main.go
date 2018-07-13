@@ -15,22 +15,22 @@ import (
 	"github.com/MakingGame/taxi/exporter"
 	"github.com/MakingGame/taxi/importer"
 	_ "github.com/MakingGame/taxi/mydb"
+	"github.com/MakingGame/taxi/version"
 	"github.com/jessevdk/go-flags"
 )
 
 type Options struct {
-	Version     bool   `short:"v" long:"version" description:"show version string"`
-	Mode        string `short:"M" long:"mode" description:"mode of importer source"`
-	ImportArgs  string `long:"import-args" description:"arguments of importer"`
-	ExportArgs  string `long:"export-args" description:"arguments of exporter"`
-	ExporterDir string `long:"export-template-dir" description:"exporter template directory"`
+	Version      bool   `short:"v" long:"version" description:"show version string"`
+	Mode         string `short:"M" long:"mode" description:"mode of importer source"`
+	ImportArgs   string `long:"import-args" description:"arguments of importer"`
+	ExportArgs   string `long:"export-args" description:"arguments of exporter"`
+	ExporterDir  string `long:"export-template-dir" description:"exporter template directory"`
+	ExporterPath string `long:"exporter-path" descriptor:"exporter file path"`
 }
 
 func NewOptions() *Options {
 	return &Options{}
 }
-
-var Version = "0.1.1"
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
@@ -47,7 +47,7 @@ func main() {
 		log.Fatalf("flags.Parse: %v", err)
 	}
 	if opts.Version {
-		fmt.Printf("ver %s, (built w/%s, OS/Arch: %s/%s)", Version, runtime.Version(),
+		fmt.Printf("ver %s, (built w/%s, OS/Arch: %s/%s)", version.Version, runtime.Version(),
 			runtime.GOOS, runtime.GOARCH)
 		return
 	}
@@ -57,11 +57,11 @@ func main() {
 		fmt.Printf("unrecognized imporeter mode [%v], run taxi --help to show how to use", opts.Mode)
 		return
 	}
+	defer worker.Close()
 	if err := worker.Init(opts.ImportArgs); err != nil {
 		fmt.Printf("Init failed: %v\n", err)
 		return
 	}
-	defer worker.Close()
 
 	descriptors, err := worker.Import()
 	if err != nil {
@@ -69,7 +69,7 @@ func main() {
 		return
 	}
 
-	if err := exporter.RunExport(opts.ExporterDir, opts.ExportArgs, descriptors); err != nil {
+	if err := exporter.RunExport(opts.ExporterPath, opts.ExporterDir, opts.ExportArgs, descriptors); err != nil {
 		fmt.Printf("Run export failed: %v\n", err)
 		return
 	}

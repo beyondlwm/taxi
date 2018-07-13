@@ -17,10 +17,22 @@ It has these top-level messages:
 package descriptor
 
 import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
+import math "math"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
+var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+// A compilation error at this line likely means your copy of the
+// proto package needs to be updated.
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+
+// available type names:
+//  nil,bool,int8,uint8,int16,uint16,int32,uint32,int64,uint64,float32,float64,string,bytes,datetime
 type TypeEnum int32
 
 const (
@@ -31,15 +43,18 @@ const (
 	TypeEnum_Uint8    TypeEnum = 4
 	TypeEnum_Int16    TypeEnum = 5
 	TypeEnum_Uint16   TypeEnum = 6
-	TypeEnum_Int32    TypeEnum = 7
-	TypeEnum_Uint32   TypeEnum = 8
-	TypeEnum_Int64    TypeEnum = 9
-	TypeEnum_Uint64   TypeEnum = 10
-	TypeEnum_Float32  TypeEnum = 11
-	TypeEnum_Float64  TypeEnum = 12
-	TypeEnum_String   TypeEnum = 13
-	TypeEnum_Bytes    TypeEnum = 14
-	TypeEnum_DateTime TypeEnum = 15
+	TypeEnum_Int      TypeEnum = 7
+	TypeEnum_Int32    TypeEnum = 8
+	TypeEnum_Uint32   TypeEnum = 9
+	TypeEnum_Int64    TypeEnum = 10
+	TypeEnum_Uint64   TypeEnum = 11
+	TypeEnum_Float    TypeEnum = 12
+	TypeEnum_Float32  TypeEnum = 13
+	TypeEnum_Float64  TypeEnum = 14
+	TypeEnum_String   TypeEnum = 15
+	TypeEnum_Bytes    TypeEnum = 16
+	TypeEnum_DateTime TypeEnum = 17
+	TypeEnum_Json     TypeEnum = 18
 )
 
 var TypeEnum_name = map[int32]string{
@@ -50,15 +65,18 @@ var TypeEnum_name = map[int32]string{
 	4:  "Uint8",
 	5:  "Int16",
 	6:  "Uint16",
-	7:  "Int32",
-	8:  "Uint32",
-	9:  "Int64",
-	10: "Uint64",
-	11: "Float32",
-	12: "Float64",
-	13: "String",
-	14: "Bytes",
-	15: "DateTime",
+	7:  "Int",
+	8:  "Int32",
+	9:  "Uint32",
+	10: "Int64",
+	11: "Uint64",
+	12: "Float",
+	13: "Float32",
+	14: "Float64",
+	15: "String",
+	16: "Bytes",
+	17: "DateTime",
+	18: "Json",
 }
 var TypeEnum_value = map[string]int32{
 	"Unknown":  0,
@@ -68,32 +86,58 @@ var TypeEnum_value = map[string]int32{
 	"Uint8":    4,
 	"Int16":    5,
 	"Uint16":   6,
-	"Int32":    7,
-	"Uint32":   8,
-	"Int64":    9,
-	"Uint64":   10,
-	"Float32":  11,
-	"Float64":  12,
-	"String":   13,
-	"Bytes":    14,
-	"DateTime": 15,
+	"Int":      7,
+	"Int32":    8,
+	"Uint32":   9,
+	"Int64":    10,
+	"Uint64":   11,
+	"Float":    12,
+	"Float32":  13,
+	"Float64":  14,
+	"String":   15,
+	"Bytes":    16,
+	"DateTime": 17,
+	"Json":     18,
 }
 
 func (x TypeEnum) String() string {
 	return proto.EnumName(TypeEnum_name, int32(x))
 }
+func (TypeEnum) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
 type StructDescriptor struct {
 	Name          string             `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	CamelCaseName string             `protobuf:"bytes,2,opt,name=camel_case_name" json:"camel_case_name,omitempty"`
+	CamelCaseName string             `protobuf:"bytes,2,opt,name=camel_case_name,json=camelCaseName" json:"camel_case_name,omitempty"`
 	Comment       string             `protobuf:"bytes,3,opt,name=comment" json:"comment,omitempty"`
 	Fields        []*FieldDescriptor `protobuf:"bytes,4,rep,name=fields" json:"fields,omitempty"`
 	Options       map[string]string  `protobuf:"bytes,5,rep,name=options" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
-func (m *StructDescriptor) Reset()         { *m = StructDescriptor{} }
-func (m *StructDescriptor) String() string { return proto.CompactTextString(m) }
-func (*StructDescriptor) ProtoMessage()    {}
+func (m *StructDescriptor) Reset()                    { *m = StructDescriptor{} }
+func (m *StructDescriptor) String() string            { return proto.CompactTextString(m) }
+func (*StructDescriptor) ProtoMessage()               {}
+func (*StructDescriptor) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+
+func (m *StructDescriptor) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *StructDescriptor) GetCamelCaseName() string {
+	if m != nil {
+		return m.CamelCaseName
+	}
+	return ""
+}
+
+func (m *StructDescriptor) GetComment() string {
+	if m != nil {
+		return m.Comment
+	}
+	return ""
+}
 
 func (m *StructDescriptor) GetFields() []*FieldDescriptor {
 	if m != nil {
@@ -111,18 +155,68 @@ func (m *StructDescriptor) GetOptions() map[string]string {
 
 type FieldDescriptor struct {
 	Name             string            `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	CamelCaseName    string            `protobuf:"bytes,2,opt,name=camel_case_name" json:"camel_case_name,omitempty"`
+	CamelCaseName    string            `protobuf:"bytes,2,opt,name=camel_case_name,json=camelCaseName" json:"camel_case_name,omitempty"`
 	Type             TypeEnum          `protobuf:"varint,3,opt,name=type,enum=descriptor.TypeEnum" json:"type,omitempty"`
-	TypeName         string            `protobuf:"bytes,4,opt,name=type_name" json:"type_name,omitempty"`
-	OriginalTypeName string            `protobuf:"bytes,5,opt,name=original_type_name" json:"original_type_name,omitempty"`
+	TypeName         string            `protobuf:"bytes,4,opt,name=type_name,json=typeName" json:"type_name,omitempty"`
+	OriginalTypeName string            `protobuf:"bytes,5,opt,name=original_type_name,json=originalTypeName" json:"original_type_name,omitempty"`
 	Comment          string            `protobuf:"bytes,6,opt,name=comment" json:"comment,omitempty"`
-	DefaultValue     string            `protobuf:"bytes,7,opt,name=default_value" json:"default_value,omitempty"`
+	DefaultValue     string            `protobuf:"bytes,7,opt,name=default_value,json=defaultValue" json:"default_value,omitempty"`
 	Options          map[string]string `protobuf:"bytes,8,rep,name=options" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
-func (m *FieldDescriptor) Reset()         { *m = FieldDescriptor{} }
-func (m *FieldDescriptor) String() string { return proto.CompactTextString(m) }
-func (*FieldDescriptor) ProtoMessage()    {}
+func (m *FieldDescriptor) Reset()                    { *m = FieldDescriptor{} }
+func (m *FieldDescriptor) String() string            { return proto.CompactTextString(m) }
+func (*FieldDescriptor) ProtoMessage()               {}
+func (*FieldDescriptor) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *FieldDescriptor) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *FieldDescriptor) GetCamelCaseName() string {
+	if m != nil {
+		return m.CamelCaseName
+	}
+	return ""
+}
+
+func (m *FieldDescriptor) GetType() TypeEnum {
+	if m != nil {
+		return m.Type
+	}
+	return TypeEnum_Unknown
+}
+
+func (m *FieldDescriptor) GetTypeName() string {
+	if m != nil {
+		return m.TypeName
+	}
+	return ""
+}
+
+func (m *FieldDescriptor) GetOriginalTypeName() string {
+	if m != nil {
+		return m.OriginalTypeName
+	}
+	return ""
+}
+
+func (m *FieldDescriptor) GetComment() string {
+	if m != nil {
+		return m.Comment
+	}
+	return ""
+}
+
+func (m *FieldDescriptor) GetDefaultValue() string {
+	if m != nil {
+		return m.DefaultValue
+	}
+	return ""
+}
 
 func (m *FieldDescriptor) GetOptions() map[string]string {
 	if m != nil {
@@ -135,12 +229,42 @@ type ImportResult struct {
 	Version     string              `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 	Comment     string              `protobuf:"bytes,2,opt,name=comment" json:"comment,omitempty"`
 	Timestamp   string              `protobuf:"bytes,3,opt,name=timestamp" json:"timestamp,omitempty"`
-	Descriptors []*StructDescriptor `protobuf:"bytes,4,rep,name=descriptors" json:"descriptors,omitempty"`
+	Options     map[string]string   `protobuf:"bytes,4,rep,name=options" json:"options,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Descriptors []*StructDescriptor `protobuf:"bytes,5,rep,name=descriptors" json:"descriptors,omitempty"`
 }
 
-func (m *ImportResult) Reset()         { *m = ImportResult{} }
-func (m *ImportResult) String() string { return proto.CompactTextString(m) }
-func (*ImportResult) ProtoMessage()    {}
+func (m *ImportResult) Reset()                    { *m = ImportResult{} }
+func (m *ImportResult) String() string            { return proto.CompactTextString(m) }
+func (*ImportResult) ProtoMessage()               {}
+func (*ImportResult) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func (m *ImportResult) GetVersion() string {
+	if m != nil {
+		return m.Version
+	}
+	return ""
+}
+
+func (m *ImportResult) GetComment() string {
+	if m != nil {
+		return m.Comment
+	}
+	return ""
+}
+
+func (m *ImportResult) GetTimestamp() string {
+	if m != nil {
+		return m.Timestamp
+	}
+	return ""
+}
+
+func (m *ImportResult) GetOptions() map[string]string {
+	if m != nil {
+		return m.Options
+	}
+	return nil
+}
 
 func (m *ImportResult) GetDescriptors() []*StructDescriptor {
 	if m != nil {
@@ -153,13 +277,98 @@ type ExportRequest struct {
 	Version  string `protobuf:"bytes,1,opt,name=version" json:"version,omitempty"`
 	Format   string `protobuf:"bytes,3,opt,name=format" json:"format,omitempty"`
 	Filepath string `protobuf:"bytes,4,opt,name=filepath" json:"filepath,omitempty"`
-	Args     string `protobuf:"bytes,5,opt,name=args" json:"args,omitempty"`
+	Datafile string `protobuf:"bytes,5,opt,name=datafile" json:"datafile,omitempty"`
+	Args     string `protobuf:"bytes,6,opt,name=args" json:"args,omitempty"`
 }
 
-func (m *ExportRequest) Reset()         { *m = ExportRequest{} }
-func (m *ExportRequest) String() string { return proto.CompactTextString(m) }
-func (*ExportRequest) ProtoMessage()    {}
+func (m *ExportRequest) Reset()                    { *m = ExportRequest{} }
+func (m *ExportRequest) String() string            { return proto.CompactTextString(m) }
+func (*ExportRequest) ProtoMessage()               {}
+func (*ExportRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *ExportRequest) GetVersion() string {
+	if m != nil {
+		return m.Version
+	}
+	return ""
+}
+
+func (m *ExportRequest) GetFormat() string {
+	if m != nil {
+		return m.Format
+	}
+	return ""
+}
+
+func (m *ExportRequest) GetFilepath() string {
+	if m != nil {
+		return m.Filepath
+	}
+	return ""
+}
+
+func (m *ExportRequest) GetDatafile() string {
+	if m != nil {
+		return m.Datafile
+	}
+	return ""
+}
+
+func (m *ExportRequest) GetArgs() string {
+	if m != nil {
+		return m.Args
+	}
+	return ""
+}
 
 func init() {
+	proto.RegisterType((*StructDescriptor)(nil), "descriptor.StructDescriptor")
+	proto.RegisterType((*FieldDescriptor)(nil), "descriptor.FieldDescriptor")
+	proto.RegisterType((*ImportResult)(nil), "descriptor.ImportResult")
+	proto.RegisterType((*ExportRequest)(nil), "descriptor.ExportRequest")
 	proto.RegisterEnum("descriptor.TypeEnum", TypeEnum_name, TypeEnum_value)
+}
+
+func init() { proto.RegisterFile("descriptor.proto", fileDescriptor0) }
+
+var fileDescriptor0 = []byte{
+	// 602 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x54, 0xcf, 0x6a, 0xdb, 0x4e,
+	0x10, 0xfe, 0xe9, 0x8f, 0x25, 0x79, 0x6c, 0x27, 0xfb, 0x5b, 0x42, 0x31, 0x49, 0x0e, 0x21, 0xa5,
+	0xc5, 0x2d, 0x25, 0x10, 0x3b, 0x98, 0x90, 0x43, 0x0b, 0xf9, 0x07, 0xee, 0x21, 0x05, 0x25, 0xe9,
+	0xd5, 0x6c, 0xed, 0x75, 0xba, 0x44, 0xda, 0x55, 0xb5, 0xab, 0xb4, 0x3e, 0xf6, 0x01, 0xfa, 0x08,
+	0xed, 0xbb, 0xf5, 0x4d, 0xca, 0xae, 0xb4, 0x91, 0x12, 0x8a, 0x2f, 0xa1, 0x27, 0xcf, 0x7c, 0xdf,
+	0xcc, 0x78, 0xbe, 0x99, 0x59, 0x01, 0x9a, 0x53, 0x39, 0xcb, 0x59, 0xa6, 0x44, 0xbe, 0x97, 0xe5,
+	0x42, 0x09, 0x0c, 0x35, 0xb2, 0xfb, 0xcb, 0x05, 0x74, 0xa9, 0xf2, 0x62, 0xa6, 0x4e, 0xef, 0x41,
+	0x8c, 0xc1, 0xe7, 0x24, 0xa5, 0x7d, 0x67, 0xc7, 0x19, 0xb4, 0x63, 0x63, 0xe3, 0x97, 0xb0, 0x3e,
+	0x23, 0x29, 0x4d, 0xa6, 0x33, 0x22, 0xe9, 0xd4, 0xd0, 0xae, 0xa1, 0x7b, 0x06, 0x3e, 0x21, 0x92,
+	0x5e, 0xe8, 0xb8, 0x3e, 0x84, 0x33, 0x91, 0xa6, 0x94, 0xab, 0xbe, 0x67, 0x78, 0xeb, 0xe2, 0x11,
+	0x04, 0x0b, 0x46, 0x93, 0xb9, 0xec, 0xfb, 0x3b, 0xde, 0xa0, 0x33, 0xdc, 0xda, 0x6b, 0x74, 0x76,
+	0xae, 0x99, 0xba, 0x85, 0xb8, 0x0a, 0xc5, 0x27, 0x10, 0x8a, 0x4c, 0x31, 0xc1, 0x65, 0xbf, 0x65,
+	0xb2, 0x5e, 0x35, 0xb3, 0x1e, 0x77, 0xbe, 0xf7, 0xa1, 0x8c, 0x3d, 0xe3, 0x2a, 0x5f, 0xc6, 0x36,
+	0x73, 0xf3, 0x08, 0xba, 0x4d, 0x02, 0x23, 0xf0, 0x6e, 0xe9, 0xb2, 0x92, 0xa7, 0x4d, 0xbc, 0x01,
+	0xad, 0x3b, 0x92, 0x14, 0x56, 0x53, 0xe9, 0x1c, 0xb9, 0x87, 0xce, 0xee, 0x77, 0x0f, 0xd6, 0x1f,
+	0x35, 0xf7, 0xa4, 0xf9, 0x0c, 0xc0, 0x57, 0xcb, 0x8c, 0x9a, 0xe1, 0xac, 0x0d, 0x37, 0x9a, 0x6a,
+	0xae, 0x96, 0x19, 0x3d, 0xe3, 0x45, 0x1a, 0x9b, 0x08, 0xbc, 0x05, 0x6d, 0xfd, 0x5b, 0xd6, 0xf2,
+	0x4d, 0xad, 0x48, 0x03, 0xa6, 0xcc, 0x1b, 0xc0, 0x22, 0x67, 0x37, 0x8c, 0x93, 0x64, 0x5a, 0x47,
+	0xb5, 0x4c, 0x14, 0xb2, 0xcc, 0x95, 0x8d, 0x6e, 0x2c, 0x25, 0x78, 0xb8, 0x94, 0xe7, 0xd0, 0x9b,
+	0xd3, 0x05, 0x29, 0x12, 0x35, 0x2d, 0x07, 0x10, 0x1a, 0xbe, 0x5b, 0x81, 0x1f, 0x35, 0x86, 0x8f,
+	0xeb, 0x25, 0x44, 0x66, 0x09, 0x83, 0x15, 0xab, 0xfb, 0x07, 0x3b, 0xf8, 0xe9, 0x42, 0x77, 0x92,
+	0x66, 0x22, 0x57, 0x31, 0x95, 0x45, 0xa2, 0xb4, 0x9e, 0x3b, 0x9a, 0x4b, 0x26, 0x78, 0x55, 0xc0,
+	0xba, 0x4d, 0xa5, 0xee, 0x43, 0xa5, 0xdb, 0xd0, 0x56, 0x2c, 0xa5, 0x52, 0x91, 0x34, 0xab, 0x4e,
+	0xb3, 0x06, 0xf0, 0xbb, 0x5a, 0x62, 0x79, 0x9d, 0x2f, 0x9a, 0x12, 0x9b, 0x7f, 0xfe, 0x77, 0x7d,
+	0xf8, 0x2d, 0x74, 0xea, 0x04, 0x7b, 0xac, 0xdb, 0xab, 0x8e, 0x35, 0x6e, 0x26, 0x3c, 0x69, 0x3e,
+	0x3f, 0x1c, 0xe8, 0x9d, 0x7d, 0x2b, 0x5b, 0xfc, 0x52, 0x50, 0xb9, 0x6a, 0x40, 0xcf, 0x20, 0x58,
+	0x88, 0x3c, 0x25, 0xf6, 0x79, 0x56, 0x1e, 0xde, 0x84, 0x68, 0xc1, 0x12, 0x9a, 0x11, 0xf5, 0xd9,
+	0x1e, 0x9b, 0xf5, 0x35, 0x37, 0x27, 0x8a, 0x68, 0xbf, 0x3a, 0xb1, 0x7b, 0x5f, 0xbf, 0x05, 0x92,
+	0xdf, 0xc8, 0xea, 0xae, 0x8c, 0xfd, 0xfa, 0xb7, 0x03, 0x91, 0x3d, 0x66, 0xdc, 0x81, 0xf0, 0x9a,
+	0xdf, 0x72, 0xf1, 0x95, 0xa3, 0xff, 0x70, 0x08, 0xde, 0x05, 0x4b, 0x90, 0x83, 0x23, 0xf0, 0x8f,
+	0x85, 0x48, 0x90, 0xab, 0xad, 0x09, 0x57, 0x87, 0xc8, 0xc3, 0x6d, 0x68, 0x5d, 0x33, 0x6d, 0xfa,
+	0xda, 0x9c, 0x70, 0xb5, 0x3f, 0x46, 0x2d, 0x0c, 0x10, 0x68, 0x74, 0x7f, 0x8c, 0x02, 0x9d, 0x3e,
+	0xe1, 0x0a, 0x85, 0x15, 0x3f, 0x1a, 0xa2, 0xc8, 0xf2, 0xa3, 0x21, 0x6a, 0x57, 0xf0, 0xf8, 0x00,
+	0x81, 0x85, 0xc7, 0x07, 0xa8, 0xa3, 0xe1, 0xf3, 0x44, 0x10, 0x85, 0xba, 0xba, 0x1b, 0x63, 0x8e,
+	0x86, 0xa8, 0x77, 0xef, 0x8c, 0x0f, 0xd0, 0x9a, 0x4e, 0xb8, 0x54, 0x39, 0xe3, 0x37, 0x68, 0x5d,
+	0x27, 0x1c, 0x2f, 0x15, 0x95, 0x08, 0xe1, 0x2e, 0x44, 0xa7, 0x44, 0xd1, 0x2b, 0x96, 0x52, 0xf4,
+	0xbf, 0x6e, 0xf6, 0xbd, 0x14, 0x1c, 0xe1, 0x4f, 0x81, 0xf9, 0x96, 0x8e, 0xfe, 0x04, 0x00, 0x00,
+	0xff, 0xff, 0x3a, 0x54, 0xd1, 0x41, 0x5f, 0x05, 0x00, 0x00,
 }
