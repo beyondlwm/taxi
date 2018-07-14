@@ -38,6 +38,7 @@ var enumNames = map[TypeEnum]string{
 	TypeEnum_Float32:  "float32",
 	TypeEnum_Float64:  "float64",
 	TypeEnum_String:   "string",
+	TypeEnum_Enum:     "enum",
 	TypeEnum_Bytes:    "bytes",
 	TypeEnum_DateTime: "datetime",
 	TypeEnum_Json:     "json",

@@ -92,7 +92,6 @@ func RunExport(filepath, dir, params string, result *descriptor.ImportResult) er
 	if err != nil {
 		return err
 	}
-	defer os.Remove(filename)
 
 	fmt.Printf("write descriptor to file %s\n", filename)
 

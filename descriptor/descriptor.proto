@@ -25,9 +25,10 @@ enum TypeEnum {
 	Float32   = 13;
 	Float64   = 14;
 	String    = 15;
-	Bytes     = 16;
-	DateTime  = 17;
-    Json      = 18;
+    Enum      = 16;
+	Bytes     = 17;
+	DateTime  = 18;
+    Json      = 19;
 };
 
 message StructDescriptor {

@@ -47,14 +47,14 @@ func ImporterByName(name string) Importer {
 
 func ParseArgs(args string) (map[string]string, error) {
 	if args == "" {
-		return nil, fmt.Errorf("empty arguments")
+		return nil, fmt.Errorf("ParseArgs: empty arguments")
 	}
 	var kvlist = strings.Split(args, ",")
 	var opts = make(map[string]string)
 	for _, item := range kvlist {
 		kv := strings.Split(item, "=")
 		if len(kv) != 2 {
-			return nil, fmt.Errorf("invalid mysql DSN arguments: %s", item)
+			return nil, fmt.Errorf("ParseArgs: invalid key-value pair arguments: %s", item)
 		}
 		opts[kv[0]] = kv[1]
 	}

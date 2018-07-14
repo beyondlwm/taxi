@@ -32,7 +32,7 @@ func enumerateExcelFiles(dir string) []string {
 	var files []string
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Printf("walk dir[%s]: %v\n", dir, err)
+			fmt.Printf("enumerateExcelFiles: %s,  %v\n", dir, err)
 			return err
 		}
 		if info.IsDir() {
@@ -65,7 +65,7 @@ func (e *ExcelImporter) Init(args string) error {
 	if filepath := opts["filename"]; filepath != "" {
 		files = append(files, filepath)
 	}
-
+	e.filelist = files
 	return nil
 }
 
@@ -98,7 +98,7 @@ func (e *ExcelImporter) parseMeta() error {
 	if len(e.meta["keys"]) == 0 {
 		e.meta["keys"] = "1" // default first column is key
 	}
-	fmt.Printf("sheet meta %v\n", e.meta)
+	fmt.Printf("parsed sheet meta %v\n", e.meta)
 	return nil
 }
 
@@ -114,7 +114,7 @@ func (e *ExcelImporter) parseSheet(sheetName string) (*descriptor.StructDescript
 	// validate meta index
 	typeColumnIndex, err := strconv.Atoi(e.meta[PredefStructTypeColumn])
 	if err != nil {
-		fmt.Printf("parse %s failed\n", PredefStructTypeColumn)
+		fmt.Printf("parseSheet: parse %s failed\n", PredefStructTypeColumn)
 		return nil, err
 	}
 	if typeColumnIndex >= len(rows) {
@@ -122,7 +122,7 @@ func (e *ExcelImporter) parseSheet(sheetName string) (*descriptor.StructDescript
 	}
 	nameColumnIndex, err := strconv.Atoi(e.meta[PredefStructNameColumn])
 	if err != nil {
-		fmt.Printf("parse %s failed\n", PredefStructNameColumn)
+		fmt.Printf("parseSheet: parse %s failed\n", PredefStructNameColumn)
 		return nil, err
 	}
 	if nameColumnIndex >= len(rows) {
@@ -130,7 +130,7 @@ func (e *ExcelImporter) parseSheet(sheetName string) (*descriptor.StructDescript
 	}
 	dataStartColumnIndex, err := strconv.Atoi(e.meta[PredefDataStartColumn])
 	if err != nil {
-		fmt.Printf("parse %s failed\n", PredefDataStartColumn)
+		fmt.Printf("parseSheet: parse %s failed\n", PredefDataStartColumn)
 		return nil, err
 	}
 	if dataStartColumnIndex >= len(rows) || dataStartColumnIndex <= typeColumnIndex || dataStartColumnIndex <= nameColumnIndex {
@@ -189,7 +189,7 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 		field.OriginalTypeName = field.TypeName
 		field.Type = descriptor.NameToType(typeRow[i])
 		if field.Type == descriptor.TypeEnum_Unknown {
-			log.Panicf("detected unkown type: %s, %v", typeRow[i], field)
+			log.Panicf("parseSheetData:detected unkown type: %s, %v\n", typeRow[i], field)
 		}
 		if commentIndex > 0 {
 			field.Comment = rows[commentIndex][i]
@@ -203,13 +203,13 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 	var filename = descriptor.MakeOneTempFile("taxi", ".csv")
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
-		log.Panicf("open file %s failed: %v", filename, err)
+		log.Panicf("parseSheetData: open file %s failed: %v\n", filename, err)
 	}
 	defer f.Close()
 	var writer = csv.NewWriter(f)
 	for _, row := range e.dataRows {
 		if err := writer.Write(row); err != nil {
-			log.Panicf("write data to %s failed: %v", filename, err)
+			log.Panicf("parseSheetData: write data to %s failed: %v", filename, err)
 		}
 	}
 	class.Options = e.meta
@@ -226,7 +226,7 @@ func (e *ExcelImporter) imporeOneFile(result *descriptor.ImportResult) error {
 		var sheetName = e.meta["sheet"]
 		des, err := e.parseSheet(sheetName)
 		if err != nil {
-			fmt.Printf("parse sheet %s failed", sheetName)
+			fmt.Printf("imporeOneFile: parse sheet %s failed\n", sheetName)
 			return err
 		}
 		result.Descriptors = append(result.Descriptors, des)
@@ -241,7 +241,7 @@ func (e *ExcelImporter) imporeOneFile(result *descriptor.ImportResult) error {
 				var sheetName = sheetMap[sheetIndex]
 				des, err := e.parseSheet(sheetName)
 				if err != nil {
-					fmt.Printf("parse sheet %s failed", sheetName)
+					fmt.Printf("imporeOneFile: parse sheet %s failed\n", sheetName)
 					return err
 				}
 				result.Descriptors = append(result.Descriptors, des)
@@ -253,7 +253,7 @@ func (e *ExcelImporter) imporeOneFile(result *descriptor.ImportResult) error {
 				if sheetName != PredefMetaSheet {
 					des, err := e.parseSheet(sheetName)
 					if err != nil {
-						fmt.Printf("parse sheet %s failed", sheetName)
+						fmt.Printf("imporeOneFile: parse sheet %s failed\n", sheetName)
 						return err
 					}
 					result.Descriptors = append(result.Descriptors, des)
@@ -268,7 +268,7 @@ func (e *ExcelImporter) imporeOneFile(result *descriptor.ImportResult) error {
 	var sheetName = sheetMap[1]
 	des, err := e.parseSheet(sheetName)
 	if err != nil {
-		fmt.Printf("parse sheet %s failed", sheetName)
+		fmt.Printf("imporeOneFile: parse sheet %s failed\n", sheetName)
 		return err
 	}
 	result.Descriptors = append(result.Descriptors, des)
@@ -281,10 +281,14 @@ func (e *ExcelImporter) Import() (*descriptor.ImportResult, error) {
 		Comment:   "excel",
 		Timestamp: descriptor.FormatTime(time.Now()),
 	}
+	if len(e.filelist) == 0 {
+		return nil, fmt.Errorf("no excel file specified")
+	}
 	for _, filename := range e.filelist {
 		fmt.Printf("start parse file %s\n", filename)
 		doc, err := excelize.OpenFile(filename)
 		if err != nil {
+			fmt.Printf("ExcelImporter: OpenFile, %s\n", filename)
 			return nil, err
 		}
 		e.doc = doc
