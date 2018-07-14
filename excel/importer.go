@@ -14,18 +14,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/MakingGame/taxi/descriptor"
 	"github.com/MakingGame/taxi/importer"
 	"github.com/MakingGame/taxi/version"
+	"github.com/tealeg/xlsx"
 )
 
 type ExcelImporter struct {
-	filelist         []string
-	doc              *excelize.File
-	meta             map[string]string
-	currentSheetName string
-	dataRows         [][]string
+	filelist     []string
+	doc          *xlsx.File
+	meta         map[string]string
+	currentSheet *xlsx.Sheet
+	dataRows     [][]string
 }
 
 func enumerateExcelFiles(dir string) []string {
@@ -69,9 +69,27 @@ func (e *ExcelImporter) Init(args string) error {
 	return nil
 }
 
+func (e *ExcelImporter) getSheetRows(sheet *xlsx.Sheet) [][]string {
+	var textRows [][]string
+	for _, row := range sheet.Rows {
+		var textRow = make([]string, 0, len(row.Cells))
+		for _, cell := range row.Cells {
+			cell.NumFmt = "string"
+			textRow = append(textRow, cell.String())
+		}
+		if len(textRow) > 9 && textRow[9] == "Armory_03" && textRow[0] == "20" && textRow[1] == "20" {
+			fmt.Printf("%s\n", textRow)
+			fmt.Printf("%v\n", row.Cells[10].Value)
+		}
+		textRows = append(textRows, textRow)
+	}
+	return textRows
+}
+
 func (e *ExcelImporter) parseMeta() error {
-	var rows = e.doc.GetRows(PredefMetaSheet)
-	if len(rows) > 0 {
+	var sheet = e.doc.Sheet[PredefMetaSheet]
+	if sheet != nil {
+		var rows = e.getSheetRows(sheet)
 		for _, row := range rows {
 			if len(row) >= 2 {
 				var key = strings.TrimSpace(row[0])
@@ -102,13 +120,13 @@ func (e *ExcelImporter) parseMeta() error {
 	return nil
 }
 
-func (e *ExcelImporter) parseSheet(sheetName string) (*descriptor.StructDescriptor, error) {
+func (e *ExcelImporter) parseSheet(sheet *xlsx.Sheet) (*descriptor.StructDescriptor, error) {
 	e.dataRows = nil
-	e.currentSheetName = sheetName
+	e.currentSheet = sheet
 
-	var rows = e.doc.GetRows(sheetName)
+	var rows = e.getSheetRows(sheet)
 	if len(rows) == 0 {
-		return nil, fmt.Errorf("sheet is empty")
+		return nil, fmt.Errorf("sheet %v is empty", sheet.Name)
 	}
 
 	// validate meta index
@@ -161,7 +179,7 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 	}
 
 	// class name
-	var className = e.currentSheetName
+	var className = e.currentSheet.Name
 	if e.meta[PredefClassName] != "" {
 		className = e.meta[PredefClassName]
 	}
@@ -222,56 +240,16 @@ func (e *ExcelImporter) imporeOneFile(result *descriptor.ImportResult) error {
 	if err := e.parseMeta(); err != nil {
 		return err
 	}
-	if e.meta["sheet"] != "" {
-		var sheetName = e.meta["sheet"]
-		des, err := e.parseSheet(sheetName)
+	// parse first sheet
+	for _, sheet := range e.doc.Sheets {
+		des, err := e.parseSheet(sheet)
 		if err != nil {
-			fmt.Printf("imporeOneFile: parse sheet %s failed\n", sheetName)
+			fmt.Printf("imporeOneFile: parse sheet %s failed\n", sheet.Name)
 			return err
 		}
 		result.Descriptors = append(result.Descriptors, des)
-		return nil
+		break
 	}
-	sheetMap := e.doc.GetSheetMap()
-	if e.meta["parse-mode"] != "" {
-		var mode = e.meta["parse-mode"]
-		if mode == "active-only" {
-			var sheetIndex = e.doc.GetActiveSheetIndex()
-			if sheetIndex > 0 {
-				var sheetName = sheetMap[sheetIndex]
-				des, err := e.parseSheet(sheetName)
-				if err != nil {
-					fmt.Printf("imporeOneFile: parse sheet %s failed\n", sheetName)
-					return err
-				}
-				result.Descriptors = append(result.Descriptors, des)
-			} else {
-				return fmt.Errorf("ExcelImporter: no active sheet")
-			}
-		} else if mode == "all" {
-			for _, sheetName := range sheetMap {
-				if sheetName != PredefMetaSheet {
-					des, err := e.parseSheet(sheetName)
-					if err != nil {
-						fmt.Printf("imporeOneFile: parse sheet %s failed\n", sheetName)
-						return err
-					}
-					result.Descriptors = append(result.Descriptors, des)
-				}
-			}
-		} else {
-			return fmt.Errorf("unsupported parse mode %s", mode)
-		}
-		return nil
-	}
-	// parse first sheet
-	var sheetName = sheetMap[1]
-	des, err := e.parseSheet(sheetName)
-	if err != nil {
-		fmt.Printf("imporeOneFile: parse sheet %s failed\n", sheetName)
-		return err
-	}
-	result.Descriptors = append(result.Descriptors, des)
 	return nil
 }
 
@@ -286,7 +264,7 @@ func (e *ExcelImporter) Import() (*descriptor.ImportResult, error) {
 	}
 	for _, filename := range e.filelist {
 		fmt.Printf("start parse file %s\n", filename)
-		doc, err := excelize.OpenFile(filename)
+		doc, err := xlsx.OpenFile(filename)
 		if err != nil {
 			fmt.Printf("ExcelImporter: OpenFile, %s\n", filename)
 			return nil, err
