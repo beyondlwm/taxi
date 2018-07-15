@@ -4,10 +4,10 @@
 ## Usage
 
 参数说明：
-*mode 导入模式，目前仅支持mysql和excel
-*import-args 导入器参数
-*export-args 导出脚本参数
-*exporter-path 导出脚本路径
+* mode 导入模式，目前仅支持mysql和excel
+* import-args 导入器参数
+* export-args 导出脚本参数
+* exporter-path 导出脚本路径
 
 根据MySQL表导出结构体
 
@@ -18,7 +18,9 @@
 
 示例用法：
 
-`taxi --mode=mysql --import-args=user=root,passwd=holyshit,db=mydbname --export-args=pkg=proto --exporter-path=taxi\scripts\sql_exporter.py`
+```bash
+taxi --mode=mysql --import-args=user=root,passwd=holyshit,db=mydbname --export-args=pkg=proto --exporter-path=taxi\scripts\sql_exporter.py
+```
 
 Export Excel
 
@@ -29,4 +31,6 @@ Export Excel
 
 示例用法：
 
-`taxi --mode=excel --import-args=filename=abc.xlsx --exporter-path=taxi\scripts\export_excel_cpp.py`
+```bash
+taxi --mode=excel --import-args=filename=abc.xlsx --exporter-path=taxi\scripts\export_excel_cpp.py
+```
