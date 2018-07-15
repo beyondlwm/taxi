@@ -225,7 +225,7 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 	return &class
 }
 
-//写入数据到csv文件
+//鍐欏叆鏁版嵁鍒癱sv鏂囦欢
 func (e *ExcelImporter) writeCsvData(class *descriptor.StructDescriptor) {
 	var filename = descriptor.MakeOneTempFile("taxi", ".csv")
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0755)
