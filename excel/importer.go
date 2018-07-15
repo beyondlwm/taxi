@@ -74,12 +74,7 @@ func (e *ExcelImporter) getSheetRows(sheet *xlsx.Sheet) [][]string {
 	for _, row := range sheet.Rows {
 		var textRow = make([]string, 0, len(row.Cells))
 		for _, cell := range row.Cells {
-			cell.NumFmt = "string"
 			textRow = append(textRow, cell.String())
-		}
-		if len(textRow) > 9 && textRow[9] == "Armory_03" && textRow[0] == "20" && textRow[1] == "20" {
-			fmt.Printf("%s\n", textRow)
-			fmt.Printf("%v\n", row.Cells[10].Value)
 		}
 		textRows = append(textRows, textRow)
 	}
@@ -217,7 +212,21 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 		}
 		class.Fields = append(class.Fields, &field)
 	}
-	e.dataRows = rows[dataStartColumnIndex-1 : dataEndColumnIndex-1]
+	e.dataRows = rows[dataStartColumnIndex-1 : dataEndColumnIndex]
+	// pad rows
+	for i := 0; i < len(e.dataRows); i++ {
+		for j := len(e.dataRows[i]); j < len(class.Fields); j++ {
+			e.dataRows[i] = append(e.dataRows[i], "")
+		}
+	}
+	fmt.Printf("total %d rows\n", len(e.dataRows))
+	class.Options = e.meta
+	e.writeCsvData(&class)
+	return &class
+}
+
+//写入数据到csv文件
+func (e *ExcelImporter) writeCsvData(class *descriptor.StructDescriptor) {
 	var filename = descriptor.MakeOneTempFile("taxi", ".csv")
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
@@ -225,15 +234,14 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 	}
 	defer f.Close()
 	var writer = csv.NewWriter(f)
-	for _, row := range e.dataRows {
-		if err := writer.Write(row); err != nil {
-			log.Panicf("parseSheetData: write data to %s failed: %v", filename, err)
-		}
+	if err := writer.WriteAll(e.dataRows); err != nil {
+		log.Panicf("parseSheetData: WriteAll, write csv data to %s failed: %v", filename, err)
 	}
-	class.Options = e.meta
+	if err := writer.Error(); err != nil {
+		log.Panicf("parseSheetData: write csv data to %s failed: %v", filename, err)
+	}
 	class.Options["datafile"] = filename
 	fmt.Printf("write csv data file to %s\n", filename)
-	return &class
 }
 
 func (e *ExcelImporter) imporeOneFile(result *descriptor.ImportResult) error {
