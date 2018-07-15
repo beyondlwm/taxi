@@ -44,7 +44,7 @@ func EnumerateExporterScripts(dir string) []string {
 }
 
 func StoreResultToTempFile(result *descriptor.ImportResult) (string, error) {
-	var filepath = descriptor.MakeOneTempFile("taxi", ".json")
+	var filepath = descriptor.MakeOneTempFile("taxi_meta", ".json")
 	if filepath == "" {
 		return "", fmt.Errorf("cannot create temporary file")
 	}
@@ -55,7 +55,7 @@ func StoreResultToTempFile(result *descriptor.ImportResult) (string, error) {
 		return "", err
 	}
 	defer f.Close()
-	data, err := json.Marshal(result)
+	data, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		return "", err
 	}

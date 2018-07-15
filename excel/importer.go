@@ -52,7 +52,6 @@ func (e *ExcelImporter) Name() string {
 }
 
 func (e *ExcelImporter) Init(args string) error {
-	e.meta = map[string]string{}
 	opts, err := importer.ParseArgs(args)
 	if err != nil {
 		return err
@@ -82,6 +81,7 @@ func (e *ExcelImporter) getSheetRows(sheet *xlsx.Sheet) [][]string {
 }
 
 func (e *ExcelImporter) parseMeta() error {
+	e.meta = map[string]string{}
 	var sheet = e.doc.Sheet[PredefMetaSheet]
 	if sheet != nil {
 		var rows = e.getSheetRows(sheet)
@@ -227,7 +227,7 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 
 //写入数据到csv文件
 func (e *ExcelImporter) writeCsvData(class *descriptor.StructDescriptor) {
-	var filename = descriptor.MakeOneTempFile("taxi", ".csv")
+	var filename = descriptor.MakeOneTempFile("taxi_"+class.Name, ".csv")
 	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
 		log.Panicf("parseSheetData: open file %s failed: %v\n", filename, err)
@@ -255,6 +255,7 @@ func (e *ExcelImporter) imporeOneFile(result *descriptor.ImportResult) error {
 			fmt.Printf("imporeOneFile: parse sheet %s failed\n", sheet.Name)
 			return err
 		}
+		fmt.Printf("parsed %s options: %v", sheet.Name, des.Options)
 		result.Descriptors = append(result.Descriptors, des)
 		break
 	}
