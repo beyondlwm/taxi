@@ -29,25 +29,27 @@ enum TypeEnum {
 	Bytes     = 17;
 	DateTime  = 18;
     Json      = 19;
+    Array     = 20;
+    Any       = 21;
 };
 
 message StructDescriptor {
-    string name = 1;
-    string camel_case_name = 2;
-    string comment = 3;
-    repeated FieldDescriptor fields = 4;
-    map<string,string> options = 5;
+    string name = 1;                        // name of this struct
+    string camel_case_name = 2;             // camel case name of this struct
+    string comment = 3;                     // comment of this struct
+    repeated FieldDescriptor fields = 4;    // field descriptors
+    map<string,string> options = 5;         // struct options
 }
 
 message FieldDescriptor {
-    string name = 1;
-    string camel_case_name = 2;
-    TypeEnum type = 3;
-    string type_name = 4;
-    string original_type_name = 5;
-    string comment = 6;
-    string default_value = 7;
-    map<string,string> options = 8;
+    string name = 1;                    // name of this field
+    string camel_case_name = 2;         // camel case name of this field
+    TypeEnum type = 3;                  // type of this field
+    string type_name = 4;               // type name of this field
+    string original_type_name = 5;      // original type name of this field
+    string comment = 6;                 // comment of this field
+    uint32 column_index = 7;            // column index of this field
+    map<string,string> options = 8;     // field options
 }
 
 message ImportResult {

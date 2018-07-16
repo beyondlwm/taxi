@@ -206,11 +206,12 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 			log.Panicf("duplicate name defined, %s", field.Name)
 		}
 		field.CamelCaseName = descriptor.CamelCase(field.Name)
-		field.TypeName = strings.TrimSpace(typeRow[i])
-		field.OriginalTypeName = field.TypeName
-		field.Type = descriptor.NameToType(typeRow[i])
-		if field.Type == descriptor.TypeEnum_Unknown {
-			log.Panicf("parseSheetData:detected unkown type: %s, %v\n", typeRow[i], field)
+		field.OriginalTypeName = strings.TrimSpace(typeRow[i])
+		field.Type = descriptor.NameToType(field.OriginalTypeName)
+		field.TypeName = descriptor.TypeToName(field.Type)
+		field.ColumnIndex = uint32(i + 1)
+		if field.Type == descriptor.TypeEnum_Unknown || field.TypeName == "" {
+			log.Panicf("parseSheetData: detected unkown type: %s, %v\n", field.OriginalTypeName, field)
 		}
 		if commentIndex > 0 {
 			field.Comment = rows[commentIndex][i]

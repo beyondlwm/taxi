@@ -5,6 +5,7 @@
 package descriptor
 
 import (
+	"strings"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -42,6 +43,8 @@ var enumNames = map[TypeEnum]string{
 	TypeEnum_Bytes:    "bytes",
 	TypeEnum_DateTime: "datetime",
 	TypeEnum_Json:     "json",
+	TypeEnum_Array:    "array",
+	TypeEnum_Any:      "any",
 }
 
 // enum type to enum name
@@ -54,6 +57,9 @@ func TypeToName(typ TypeEnum) string {
 
 // enum name to enum type
 func NameToType(typename string) TypeEnum {
+	if strings.Index(typename, "array") >= 0 {
+		return TypeEnum_Array
+	}
 	for k, v := range enumNames {
 		if v == typename {
 			return k
