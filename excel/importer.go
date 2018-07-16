@@ -38,6 +38,10 @@ func enumerateExcelFiles(dir string) []string {
 		if info.IsDir() {
 			return nil
 		}
+		// ignore hiden file
+		if strings.Index(info.Name(), "~$") >= 0 {
+			return nil
+		}
 		var ext = filepath.Ext(path)
 		if ext == ".xlsx" {
 			files = append(files, path)
@@ -213,12 +217,20 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 		class.Fields = append(class.Fields, &field)
 	}
 	e.dataRows = rows[dataStartColumnIndex-1 : dataEndColumnIndex]
+
 	// pad rows
+	var maxRowLen = 0
+	for _, row := range e.dataRows {
+		if len(row) > maxRowLen {
+			maxRowLen = len(row)
+		}
+	}
 	for i := 0; i < len(e.dataRows); i++ {
-		for j := len(e.dataRows[i]); j < len(class.Fields); j++ {
+		for j := len(e.dataRows[i]); j < maxRowLen; j++ {
 			e.dataRows[i] = append(e.dataRows[i], "")
 		}
 	}
+
 	fmt.Printf("total %d rows\n", len(e.dataRows))
 	class.Options = e.meta
 	e.writeCsvData(&class)
