@@ -195,12 +195,16 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 
 	var typeRow = rows[typeColumnIndex-1]
 	var namesRow = rows[nameColumnIndex-1]
+	var nameDict = map[string]bool{}
 	for i := 0; i < len(typeRow); i++ {
 		if typeRow[i] == "" || namesRow[i] == "" { // skip empty
 			continue
 		}
 		var field descriptor.FieldDescriptor
 		field.Name = strings.TrimSpace(namesRow[i])
+		if _, found := nameDict[field.Name]; found {
+			log.Panicf("duplicate name defined, %s", field.Name)
+		}
 		field.CamelCaseName = descriptor.CamelCase(field.Name)
 		field.TypeName = strings.TrimSpace(typeRow[i])
 		field.OriginalTypeName = field.TypeName
@@ -214,6 +218,7 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 		if field.Comment == "" {
 			field.Comment = " "
 		}
+		nameDict[field.Name] = true
 		class.Fields = append(class.Fields, &field)
 	}
 	e.dataRows = rows[dataStartColumnIndex-1 : dataEndColumnIndex]
