@@ -18,8 +18,11 @@ import (
 )
 
 var RegisteredInterpreters = map[string]string{
-	".py": "python",
-	".js": "node",
+	".py":  "python",
+	".js":  "node",
+	".lua": "lua",
+	".cs":  "donet run",
+	".go":  "go run",
 }
 
 func EnumerateExporterScripts(dir string) []string {
@@ -46,7 +49,7 @@ func EnumerateExporterScripts(dir string) []string {
 func StoreResultToTempFile(result *descriptor.ImportResult) (string, error) {
 	var filepath = descriptor.MakeOneTempFile("taxi_meta", ".json")
 	if filepath == "" {
-		return "", fmt.Errorf("cannot create temporary file")
+		return "", fmt.Errorf("StoreResultToTempFile: cannot create temporary file")
 	}
 
 	// write json text to file
@@ -67,7 +70,7 @@ func StoreResultToTempFile(result *descriptor.ImportResult) (string, error) {
 func RunScriptCommand(script, argument, params string) error {
 	var interpreter = RegisteredInterpreters[filepath.Ext(script)]
 	if interpreter == "" {
-		log.Fatalf("invalid interpreter of %s", script)
+		log.Fatalf("RunScriptCommand: invalid interpreter of %s", script)
 	}
 	var output bytes.Buffer
 	fmt.Printf("run %s %s", interpreter, script)
@@ -85,7 +88,7 @@ func RunScriptCommand(script, argument, params string) error {
 
 func RunExport(filepath, dir, params string, result *descriptor.ImportResult) error {
 	if dir == "" && filepath == "" {
-		return fmt.Errorf("exporter path is empty, no exporter executed")
+		return fmt.Errorf("RunExport: exporter path is empty, no exporter executed")
 	}
 
 	filename, err := StoreResultToTempFile(result)
@@ -114,7 +117,7 @@ func RunExport(filepath, dir, params string, result *descriptor.ImportResult) er
 		scripts = append(scripts, filepath)
 	}
 	if len(scripts) == 0 {
-		return fmt.Errorf("no export script found")
+		return fmt.Errorf("RunExport: no export script found")
 	}
 	for _, script := range scripts {
 		if err := RunScriptCommand(script, argument, params); err != nil {

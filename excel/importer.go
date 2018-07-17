@@ -77,7 +77,8 @@ func (e *ExcelImporter) getSheetRows(sheet *xlsx.Sheet) [][]string {
 	for _, row := range sheet.Rows {
 		var textRow = make([]string, 0, len(row.Cells))
 		for _, cell := range row.Cells {
-			textRow = append(textRow, cell.String())
+			var text = strings.TrimSpace(cell.String())
+			textRow = append(textRow, text)
 		}
 		textRows = append(textRows, textRow)
 	}
@@ -222,25 +223,42 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 		nameDict[field.Name] = true
 		class.Fields = append(class.Fields, &field)
 	}
-	e.dataRows = rows[dataStartColumnIndex-1 : dataEndColumnIndex]
-
-	// pad rows
-	var maxRowLen = 0
-	for _, row := range e.dataRows {
-		if len(row) > maxRowLen {
-			maxRowLen = len(row)
-		}
-	}
-	for i := 0; i < len(e.dataRows); i++ {
-		for j := len(e.dataRows[i]); j < maxRowLen; j++ {
-			e.dataRows[i] = append(e.dataRows[i], "")
-		}
-	}
+	var datarows = rows[dataStartColumnIndex-1 : dataEndColumnIndex]
+	e.validateSheetRows(&class, datarows)
 
 	fmt.Printf("total %d rows\n", len(e.dataRows))
 	class.Options = e.meta
 	e.writeCsvData(&class)
 	return &class
+}
+
+// skip empty type/name column
+func (e *ExcelImporter) validateSheetRows(class *descriptor.StructDescriptor, rows [][]string) {
+	// pad empty row
+	var maxRowLen = len(class.Fields)
+	for _, row := range rows {
+		if len(row) > maxRowLen {
+			maxRowLen = len(row)
+		}
+	}
+	for i, row := range rows {
+		for j := len(row); j < maxRowLen; j++ {
+			row = append(row, "")
+		}
+		rows[i] = row
+	}
+
+	var datarows = [][]string{}
+	for _, row := range rows {
+		var datarow = make([]string, 0, len(class.Fields))
+		for _, field := range class.Fields {
+			var text = row[field.ColumnIndex-1]
+			datarow = append(datarow, text)
+		}
+		datarows = append(datarows, datarow)
+	}
+
+	e.dataRows = datarows
 }
 
 //写入数据到csv文件
@@ -307,6 +325,10 @@ func (e *ExcelImporter) Import() (*descriptor.ImportResult, error) {
 
 func (e *ExcelImporter) Close() {
 	e.doc = nil
+	e.meta = nil
+	e.currentSheet = nil
+	e.filelist = nil
+	e.dataRows = nil
 }
 
 func init() {
