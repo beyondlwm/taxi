@@ -1,0 +1,19 @@
+CREATE TABLE `building` (
+	`uid` BIGINT(20) UNSIGNED NOT NULL COMMENT '角色id',
+	`id` SMALLINT(5) UNSIGNED NOT NULL COMMENT '建筑ID',
+	`name` VARCHAR(45) NOT NULL COMMENT '建筑名称' COLLATE 'utf8mb4_unicode_ci',
+	`level` SMALLINT(6) UNSIGNED NOT NULL COMMENT '等级',
+	`pos_x` SMALLINT(6) UNSIGNED NOT NULL COMMENT 'X坐标',
+	`pos_y` SMALLINT(6) UNSIGNED NOT NULL COMMENT 'Y坐标',
+	`attribute1` INT(11) UNSIGNED NOT NULL COMMENT ,
+	`attribute2` INT(11) UNSIGNED NOT NULL COMMENT ,
+	`attribute3` INT(11) UNSIGNED NOT NULL COMMENT ,
+	`attribute4` INT(11) UNSIGNED NOT NULL COMMENT ,
+	`time_stamp` DATETIME NOT NULL,
+	`soldier_name` VARCHAR(40) NOT NULL COLLATE 'utf8mb4_unicode_ci',
+	UNIQUE INDEX `unique` (`uid`, `id`)
+)
+COMMENT='建筑'
+COLLATE='utf8mb4_unicode_ci'
+ENGINE=InnoDB
+;
