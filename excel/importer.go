@@ -28,6 +28,13 @@ type ExcelImporter struct {
 	dataRows     [][]string
 }
 
+//文件名中有以下字符将被忽略
+var ignoreExcelPattern = []string{
+	"~$",
+	"-TNP-",
+	" - 副本",
+}
+
 func enumerateExcelFiles(dir string) []string {
 	var files []string
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -38,10 +45,13 @@ func enumerateExcelFiles(dir string) []string {
 		if info.IsDir() {
 			return nil
 		}
-		// ignore hiden file
-		if strings.Index(info.Name(), "~$") >= 0 {
-			return nil
+
+		for _, name := range ignoreExcelPattern {
+			if strings.Index(info.Name(), name) >= 0 {
+				return nil
+			}
 		}
+
 		var ext = filepath.Ext(path)
 		if ext == ".xlsx" {
 			files = append(files, path)
@@ -68,7 +78,22 @@ func (e *ExcelImporter) Init(args string) error {
 	if filepath := opts["filename"]; filepath != "" {
 		files = append(files, filepath)
 	}
-	e.filelist = files
+	var skipNames []string
+	if len(opts["skip"]) > 0 {
+		skipNames = strings.Split(opts["skip"], ",")
+	}
+	for _, filename := range files {
+		var found = false
+		for _, v := range skipNames {
+			if strings.Index(filename, v) >= 0 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			e.filelist = append(e.filelist, filename)
+		}
+	}
 	return nil
 }
 
