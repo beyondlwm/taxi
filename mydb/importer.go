@@ -130,6 +130,7 @@ func (m *MySQLImporter) Import() (*descriptor.ImportResult, error) {
 	if err := m.db.Load(); err != nil {
 		return nil, err
 	}
+
 	var descriptors []*descriptor.StructDescriptor
 	for _, tbl := range m.db.Tables {
 		descriptors = append(descriptors, tbl.ToDescriptor())

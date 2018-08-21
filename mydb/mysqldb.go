@@ -120,8 +120,16 @@ func (m *MyTable) ToDescriptor() *descriptor.StructDescriptor {
 	if len(m.IndexKeys) > 0 {
 		desp.Options["index_keys"] = strings.Join(m.IndexKeys, ",")
 	}
+
+	var prevField *descriptor.FieldDescriptor
 	for _, col := range m.Columns {
-		desp.Fields = append(desp.Fields, col.ToDescriptor())
+		var field = col.ToDescriptor()
+		if prevField != nil && descriptor.IsVectorFields(prevField, field) {
+			prevField.IsVector = true
+			field.IsVector = true
+		}
+		prevField = field
+		desp.Fields = append(desp.Fields, field)
 	}
 	return desp
 }

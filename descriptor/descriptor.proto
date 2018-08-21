@@ -49,7 +49,8 @@ message FieldDescriptor {
     string original_type_name = 5;      // original type name of this field
     string comment = 6;                 // comment of this field
     uint32 column_index = 7;            // column index of this field
-    map<string,string> options = 8;     // field options
+    bool is_vector = 8;                 //
+    map<string,string> options = 10;    // field options
 }
 
 message ImportResult {

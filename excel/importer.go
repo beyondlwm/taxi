@@ -222,20 +222,31 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 	var typeRow = rows[typeColumnIndex-1]
 	var namesRow = rows[nameColumnIndex-1]
 	var nameDict = map[string]bool{}
+
+	var prevField *descriptor.FieldDescriptor
 	for i := 0; i < len(typeRow); i++ {
 		if typeRow[i] == "" || namesRow[i] == "" { // skip empty
 			continue
 		}
+
 		var field descriptor.FieldDescriptor
 		field.Name = strings.TrimSpace(namesRow[i])
-		if _, found := nameDict[field.Name]; found {
-			log.Panicf("duplicate name defined, %s", field.Name)
-		}
 		field.CamelCaseName = descriptor.CamelCase(field.Name)
 		field.OriginalTypeName = strings.TrimSpace(typeRow[i])
 		field.Type = descriptor.NameToType(field.OriginalTypeName)
 		field.TypeName = descriptor.TypeToName(field.Type)
 		field.ColumnIndex = uint32(i + 1)
+
+		if _, found := nameDict[field.Name]; found {
+			log.Panicf("duplicate name defined, %s", field.Name)
+		}
+
+		if prevField != nil && descriptor.IsVectorFields(prevField, &field) {
+			prevField.IsVector = true
+			field.IsVector = true
+		}
+		prevField = &field
+
 		if field.Type == descriptor.TypeEnum_Unknown || field.TypeName == "" {
 			log.Panicf("parseSheetData: detected unkown type: %s, %v\n", field.OriginalTypeName, field)
 		}

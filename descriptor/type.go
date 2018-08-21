@@ -6,22 +6,7 @@ package descriptor
 
 import (
 	"strings"
-	"time"
-	"unicode"
-	"unicode/utf8"
 )
-
-// 首字符大写
-func Capitalize(name string) string {
-	r, i := utf8.DecodeRuneInString(name)
-	return string(unicode.ToUpper(r)) + name[i:]
-}
-
-const timestampLayout = "2006-01-02 15:04:05.999"
-
-func FormatTime(t time.Time) string {
-	return t.Format(timestampLayout)
-}
 
 var enumNames = map[TypeEnum]string{
 	TypeEnum_Nil:      "nil",
