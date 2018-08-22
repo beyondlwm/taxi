@@ -80,17 +80,20 @@ func (e *ExcelImporter) Init(args string) error {
 	}
 	var skipNames []string
 	if len(opts["skip"]) > 0 {
-		skipNames = strings.Split(opts["skip"], ",")
+		skipNames = strings.Split(opts["skip"], " ")
+
 	}
+
 	for _, filename := range files {
-		var found = false
+		var ignore = false
 		for _, v := range skipNames {
-			if strings.Index(filename, v) >= 0 {
-				found = true
+			v = strings.TrimSpace(v)
+			if v != "" && strings.Index(filename, v) >= 0 {
+				ignore = true
 				break
 			}
 		}
-		if !found {
+		if !ignore {
 			e.filelist = append(e.filelist, filename)
 		}
 	}
