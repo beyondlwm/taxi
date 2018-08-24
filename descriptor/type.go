@@ -27,9 +27,15 @@ var enumNames = map[TypeEnum]string{
 	TypeEnum_Enum:     "enum",
 	TypeEnum_Bytes:    "bytes",
 	TypeEnum_DateTime: "datetime",
-	TypeEnum_Json:     "json",
 	TypeEnum_Array:    "array",
+	TypeEnum_Map:      "map",
 	TypeEnum_Any:      "any",
+}
+
+var AbstractTypeNames = map[string]TypeEnum{
+	"array": TypeEnum_Array,
+	"map":   TypeEnum_Map,
+	"any":   TypeEnum_Any,
 }
 
 // enum type to enum name
@@ -40,10 +46,21 @@ func TypeToName(typ TypeEnum) string {
 	return ""
 }
 
+func IsPrimitiveType(typename string) bool {
+	for name, _ := range AbstractTypeNames {
+		if name == typename {
+			return false
+		}
+	}
+	return true
+}
+
 // enum name to enum type
 func NameToType(typename string) TypeEnum {
-	if strings.Index(typename, "array") >= 0 {
-		return TypeEnum_Array
+	for name, e := range AbstractTypeNames {
+		if strings.Index(typename, name) >= 0 {
+			return e
+		}
 	}
 	for k, v := range enumNames {
 		if v == typename {

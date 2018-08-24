@@ -129,17 +129,17 @@ func (e *ExcelImporter) parseMeta() error {
 		}
 	}
 
-	if e.meta[PredefStructTypeColumn] == "" {
-		e.meta[PredefStructTypeColumn] = "1"
+	if e.meta[PredefStructTypeRow] == "" {
+		e.meta[PredefStructTypeRow] = "1"
 	}
-	if e.meta[PredefStructNameColumn] == "" {
-		e.meta[PredefStructNameColumn] = "2"
+	if e.meta[PredefStructNameRow] == "" {
+		e.meta[PredefStructNameRow] = "2"
 	}
-	if e.meta[PredefCommentColumn] == "" {
-		e.meta[PredefCommentColumn] = "3"
+	if e.meta[PredefCommentRow] == "" {
+		e.meta[PredefCommentRow] = "3"
 	}
-	if e.meta[PredefDataStartColumn] == "" {
-		e.meta[PredefDataStartColumn] = "4"
+	if e.meta[PredefDataStartRow] == "" {
+		e.meta[PredefDataStartRow] = "4"
 	}
 	if len(e.meta["keys"]) == 0 {
 		e.meta["keys"] = "1" // default first column is key
@@ -158,48 +158,48 @@ func (e *ExcelImporter) parseSheet(sheet *xlsx.Sheet) (*descriptor.StructDescrip
 	}
 
 	// validate meta index
-	typeColumnIndex, err := strconv.Atoi(e.meta[PredefStructTypeColumn])
+	typeRowIndex, err := strconv.Atoi(e.meta[PredefStructTypeRow])
 	if err != nil {
-		fmt.Printf("parseSheet: parse %s failed\n", PredefStructTypeColumn)
+		fmt.Printf("parseSheet: parse %s failed\n", PredefStructTypeRow)
 		return nil, err
 	}
-	if typeColumnIndex >= len(rows) {
-		return nil, fmt.Errorf("type column index overflow, %d/%d", typeColumnIndex, len(rows))
+	if typeRowIndex >= len(rows) {
+		return nil, fmt.Errorf("type column index overflow, %d/%d", typeRowIndex, len(rows))
 	}
-	nameColumnIndex, err := strconv.Atoi(e.meta[PredefStructNameColumn])
+	nameRowIndex, err := strconv.Atoi(e.meta[PredefStructNameRow])
 	if err != nil {
-		fmt.Printf("parseSheet: parse %s failed\n", PredefStructNameColumn)
+		fmt.Printf("parseSheet: parse %s failed\n", PredefStructNameRow)
 		return nil, err
 	}
-	if nameColumnIndex >= len(rows) {
-		return nil, fmt.Errorf("name column index overflow, %d/%d", nameColumnIndex, len(rows))
+	if nameRowIndex >= len(rows) {
+		return nil, fmt.Errorf("name column index overflow, %d/%d", nameRowIndex, len(rows))
 	}
-	dataStartColumnIndex, err := strconv.Atoi(e.meta[PredefDataStartColumn])
+	dataStartRowIndex, err := strconv.Atoi(e.meta[PredefDataStartRow])
 	if err != nil {
-		fmt.Printf("parseSheet: parse %s failed\n", PredefDataStartColumn)
+		fmt.Printf("parseSheet: parse %s failed\n", PredefDataStartRow)
 		return nil, err
 	}
-	if dataStartColumnIndex >= len(rows) || dataStartColumnIndex <= typeColumnIndex || dataStartColumnIndex <= nameColumnIndex {
-		return nil, fmt.Errorf("data start column index overflow, %d/%d", dataStartColumnIndex, len(rows))
+	if dataStartRowIndex >= len(rows) || dataStartRowIndex <= typeRowIndex || dataStartRowIndex <= nameRowIndex {
+		return nil, fmt.Errorf("data start column index overflow, %d/%d", dataStartRowIndex, len(rows))
 	}
 	var dataEndColumnIndex = len(rows)
-	if e.meta[PredefDataStartColumn] != "" {
-		index, err := strconv.Atoi(e.meta[PredefDataStartColumn])
+	if e.meta[PredefDataStartRow] != "" {
+		index, err := strconv.Atoi(e.meta[PredefDataStartRow])
 		if err != nil {
 			return nil, err
 		}
-		if index >= len(rows) || index < dataStartColumnIndex {
+		if index >= len(rows) || index < dataStartRowIndex {
 			return nil, fmt.Errorf("data end column index overflow, %d", dataEndColumnIndex)
 		}
-		if index > dataStartColumnIndex {
+		if index > dataStartRowIndex {
 			dataEndColumnIndex = index
 		}
 	}
-	var des = e.parseSheetData(rows, typeColumnIndex, nameColumnIndex, dataStartColumnIndex, dataEndColumnIndex)
+	var des = e.parseSheetData(rows, typeRowIndex, nameRowIndex, dataStartRowIndex, dataEndColumnIndex)
 	return des, nil
 }
 
-func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameColumnIndex, dataStartColumnIndex, dataEndColumnIndex int) *descriptor.StructDescriptor {
+func (e *ExcelImporter) parseSheetData(rows [][]string, typeRowIndex, nameRowIndex, dataStartRowIndex, dataEndColumnIndex int) *descriptor.StructDescriptor {
 	var class descriptor.StructDescriptor
 	class.Comment = e.meta["comment"]
 	if class.Comment == "" {
@@ -215,15 +215,15 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 	class.CamelCaseName = descriptor.CamelCase(className)
 
 	var commentIndex = -1
-	if e.meta[PredefCommentColumn] != "" {
-		index, _ := strconv.Atoi(e.meta[PredefCommentColumn])
+	if e.meta[PredefCommentRow] != "" {
+		index, _ := strconv.Atoi(e.meta[PredefCommentRow])
 		if index > 0 {
 			commentIndex = index - 1
 		}
 	}
 
-	var typeRow = rows[typeColumnIndex-1]
-	var namesRow = rows[nameColumnIndex-1]
+	var typeRow = rows[typeRowIndex-1]
+	var namesRow = rows[nameRowIndex-1]
 	var nameDict = map[string]bool{}
 
 	var prevField *descriptor.FieldDescriptor
@@ -262,7 +262,7 @@ func (e *ExcelImporter) parseSheetData(rows [][]string, typeColumnIndex, nameCol
 		nameDict[field.Name] = true
 		class.Fields = append(class.Fields, &field)
 	}
-	var datarows = rows[dataStartColumnIndex-1 : dataEndColumnIndex]
+	var datarows = rows[dataStartRowIndex-1 : dataEndColumnIndex]
 	e.validateSheetRows(&class, datarows)
 
 	fmt.Printf("total %d rows\n", len(e.dataRows))

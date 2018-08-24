@@ -28,8 +28,8 @@ enum TypeEnum {
     Enum      = 16;
 	Bytes     = 17;
 	DateTime  = 18;
-    Json      = 19;
-    Array     = 20;
+    Array     = 19;
+    Map       = 20;
     Any       = 21;
 };
 

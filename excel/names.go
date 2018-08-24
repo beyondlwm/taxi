@@ -5,11 +5,11 @@
 package excel
 
 const (
-	PredefMetaSheet        = "meta"
-	PredefStructTypeColumn = "type-column"
-	PredefStructNameColumn = "name-column"
-	PredefCommentColumn    = "comment-column"
-	PredefDataStartColumn  = "data-start-column"
-	PredefDataEndColumn    = "data-end-column"
-	PredefClassName        = "class-name"
+	PredefMetaSheet     = "meta"
+	PredefStructTypeRow = "type-row"
+	PredefStructNameRow = "name-row"
+	PredefCommentRow    = "comment-row"
+	PredefDataStartRow  = "data-start-row"
+	PredefDataEndRow    = "data-end-row"
+	PredefClassName     = "class-name"
 )
